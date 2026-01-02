@@ -17,17 +17,17 @@ async def req(sess, num):
             
 async def main():
     async with aiohttp.ClientSession() as session:
-        t0 = time.perf_counter()
+        one_start = time.perf_counter()
         await req(session, 0)
-        single = time.perf_counter() - t0
+        one = time.perf_counter() - one_start
 
-        t1 = time.perf_counter()
+        all_start = time.perf_counter()
         await asyncio.gather(*(req(session, i) for i in range(100)))
-        total = time.perf_counter() - t1
+        all = time.perf_counter() - all_start
 
-        print(f"single: {single:.4f}s")
-        print(f"100 concurrent total: {total:.4f}s")
-        print(f"ratio total/single: {total/single:.2f}x")
+        print(f"<--RESULTS-->")
+        print(f"one: {one:.2f}secs")
+        print(f"100 concurrent total: {all:.2f}secs")
             
 import asyncio
 asyncio.run(main())
