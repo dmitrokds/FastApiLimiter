@@ -3,7 +3,7 @@ import time
 
 async def req(sess, num):
     async with sess.post(
-        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3000/req",
         json={
             "phone": "+38095675432",
             "text": f"test{num}"
