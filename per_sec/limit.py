@@ -5,13 +5,26 @@ from pydantic import BaseModel
 
 import asyncio
 
+import time
+
+import per_sec.limit_cache as limit_cache
 
 
-req_countdown_per_sec = 0
-last_update = None
-
-def limit():
-    pass
+def limit(func):
+    async def wrapper(
+        payload: LimitTestReq = Body(),
+        api_key: str = Header()
+    ):
+        while True:
+            async with limit_cache.reqs_lock:
+                if limit_cache.reqs_per_interval>0:
+                    limit_cache.reqs_per_interval-=1
+                    break
+            await asyncio.sleep(0.01)
+        resp = await func(payload, api_key)
+        return resp
+    
+    return wrapper
 
 
 
@@ -34,11 +47,12 @@ class LimitTestReq(BaseModel):
         "default": {"description": "ERROR","content": {"application/json": {"example": {"status": "ERROR","description": ("Invalid user number or API key | ""Tariff expired | ""Number requires activation | ""Exceeded the limit of 100 messages on the 'Easy start' tariff | ""Receiver information not specified | ""Invalid file path| ""Message information not specified")}}}}
     }
 )
+@limit
 async def send_msg(
-    payload: LimitTestReq = Body(example={
+    payload: LimitTestReq = Body(examples=[{
         "phone": "test phone",
         "text": "test text"
-    }),
+    }]),
     api_key: str = Header(description="")
 ):        
     if api_key != "test":
@@ -52,4 +66,4 @@ async def send_msg(
         
     await asyncio.sleep(3)
     
-    return "hello"
+    return str(time.time())+payload.text
