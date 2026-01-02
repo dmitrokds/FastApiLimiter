@@ -21,9 +21,13 @@ def limit(func):
                     break
             await asyncio.sleep(0.01)
             
-        limit_cache.reqs+=1
+        async with limit_cache.reqs_lock:
+            limit_cache.reqs+=1
+            
         resp = await func(payload, api_key)
-        limit_cache.reqs-=1
+        
+        async with limit_cache.reqs_lock:
+            limit_cache.reqs-=1
         
         return resp
     
